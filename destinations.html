@@ -396,12 +396,16 @@
     .nav-links-mobile{display:flex;}
     .destinations, .testimonials{margin:0 16px; padding:48px 24px;}
   }
+  @media (max-width: 900px){
+    .nav-right .nav-cta{padding:6px 11px; font-size:11px;}
+  }
   @media (max-width: 560px){
     .wrap{padding:0 20px;}
     .dest-grid{grid-template-columns:1fr;}
     .hero-frame{height:520px;}
-    section{padding:64px 0;}
+    section{padding:44px 0;}
     .newsletter{padding:36px 26px;}
+    .page-hero h1{font-size:clamp(26px,7vw,34px);}
   }
 
 </style>

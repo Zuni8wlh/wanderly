@@ -322,6 +322,7 @@
   .testimonials .eyebrow-sm{background:rgba(255,255,255,0.12); color:var(--gold);}
   .testimonials h2{color:#fff;}
   .test-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:22px;}
+  .test-clone{display:none;}
   .test-card{
     background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.14);
     border-radius:var(--r-md); padding:28px; display:flex; flex-direction:column; gap:20px;
@@ -428,6 +429,7 @@
       will-change:transform;
     }
     .test-card{flex:0 0 100%; width:100%;}
+    .test-clone{display:block;}
     .test-dots{display:flex; justify-content:center; gap:8px; margin-top:20px;}
     .test-dots button{
       width:8px; height:8px; border-radius:50%; border:none; padding:0;
@@ -788,6 +790,7 @@
 
     // clone the first slide and append, so the loop can slide seamlessly back to start
     const clone = originalSlides[0].cloneNode(true);
+    clone.classList.add('test-clone');
     track.appendChild(clone);
 
     originalSlides.forEach((_, i)=>{
