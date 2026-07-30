@@ -337,6 +337,7 @@
 
   /* logo marquee */
   .marquee-wrap{overflow:hidden; margin-top:56px; border-top:1px solid rgba(255,255,255,0.14); padding-top:36px;}
+  .test-dots{display:none;}
   .marquee-track{display:flex; gap:64px; width:max-content; animation:marquee 22s linear infinite;}
   .marquee-track span{font-family:'Plus Jakarta Sans',sans-serif; font-weight:700; font-size:15px; color:rgba(255,255,255,0.4); white-space:nowrap;}
 
@@ -391,7 +392,7 @@
     .nav-links, .search-pill{display:none;}
     .nav-toggle{display:flex;}
     .nav-links-mobile{display:flex;}
-    .nav-right .nav-cta{padding:8px 15px; font-size:12.5px;}
+    .nav-right .nav-cta{padding:6px 11px; font-size:11px;}
   }
   @media (max-width: 560px){
     .wrap{padding:0 18px;}
@@ -415,15 +416,25 @@
     .dest-card{flex:0 0 44%; scroll-snap-align:start;}
     .view-more-row{flex-direction:column; align-items:flex-start; gap:14px; margin-top:20px;}
 
-    /* testimonials: horizontal scroll */
+    .testimonials{margin:0; padding:40px 20px; border-radius:var(--r-md);}
+    .test-card{padding:24px 22px;}
+    .test-card p{font-size:16.5px;}
+
+    /* testimonials: auto-sliding carousel, one full-width card at a time */
+    .test-viewport{overflow:hidden; border-radius:var(--r-md);}
     .test-grid{
-      display:flex; overflow-x:auto; gap:14px; padding-bottom:6px;
-      scroll-snap-type:x mandatory; -webkit-overflow-scrolling:touch;
-      margin:0 -18px; padding-left:18px; padding-right:18px;
+      display:flex; flex-wrap:nowrap; gap:0;
+      transition:transform .6s cubic-bezier(.16,.84,.44,1);
+      will-change:transform;
     }
-    .test-grid::-webkit-scrollbar{display:none;}
-    .test-grid{scrollbar-width:none;}
-    .test-card{flex:0 0 82%; scroll-snap-align:start;}
+    .test-card{flex:0 0 100%; width:100%;}
+    .test-dots{display:flex; justify-content:center; gap:8px; margin-top:20px;}
+    .test-dots button{
+      width:8px; height:8px; border-radius:50%; border:none; padding:0;
+      background:rgba(255,255,255,0.28); cursor:default; transition:background .2s ease, width .2s ease;
+      pointer-events:none;
+    }
+    .test-dots button.active{background:var(--gold); width:22px; border-radius:100px;}
   }
 </style>
 </head>
@@ -654,32 +665,35 @@
           <h2>What our travelers say after coming home</h2>
         </div>
       </div>
-      <div class="test-grid">
-        <div class="test-card">
-          <div class="test-stars">★★★★★</div>
-          <p>"Every detail was handled before we even thought to ask. The itinerary felt like it was built by someone who actually knew the region."</p>
-          <div class="test-person">
-            <div class="test-avatar"><div class="imgph"></div></div>
-            <div><strong>Maya R.</strong><span>Solo traveler, Coral Bay trip</span></div>
+      <div class="test-viewport">
+        <div class="test-grid" id="testGrid">
+          <div class="test-card">
+            <div class="test-stars">★★★★★</div>
+            <p>"Every detail was handled before we even thought to ask. The itinerary felt like it was built by someone who actually knew the region."</p>
+            <div class="test-person">
+              <div class="test-avatar"><div class="imgph"></div></div>
+              <div><strong>Maya R.</strong><span>Solo traveler, Coral Bay trip</span></div>
+            </div>
           </div>
-        </div>
-        <div class="test-card">
-          <div class="test-stars">★★★★★</div>
-          <p>"Support answered at 2am when our flight got delayed and had a new plan ready before we landed. Genuinely stress-free."</p>
-          <div class="test-person">
-            <div class="test-avatar"><div class="imgph"></div></div>
-            <div><strong>Daniel K.</strong><span>Family trip, Vignar Old Town</span></div>
+          <div class="test-card">
+            <div class="test-stars">★★★★★</div>
+            <p>"Support answered at 2am when our flight got delayed and had a new plan ready before we landed. Genuinely stress-free."</p>
+            <div class="test-person">
+              <div class="test-avatar"><div class="imgph"></div></div>
+              <div><strong>Daniel K.</strong><span>Family trip, Vignar Old Town</span></div>
+            </div>
           </div>
-        </div>
-        <div class="test-card">
-          <div class="test-stars">★★★★★</div>
-          <p>"Best value we've found for a private tour. Local guides made it — the kind of trip you can't book from a generic site."</p>
-          <div class="test-person">
-            <div class="test-avatar"><div class="imgph"></div></div>
-            <div><strong>Priya & Aaron</strong><span>Couple's trip, Siren Cove</span></div>
+          <div class="test-card">
+            <div class="test-stars">★★★★★</div>
+            <p>"Best value we've found for a private tour. Local guides made it — the kind of trip you can't book from a generic site."</p>
+            <div class="test-person">
+              <div class="test-avatar"><div class="imgph"></div></div>
+              <div><strong>Priya & Aaron</strong><span>Couple's trip, Siren Cove</span></div>
+            </div>
           </div>
         </div>
       </div>
+      <div class="test-dots" id="testDots"></div>
       <div class="marquee-wrap">
         <div class="marquee-track">
           <span>FEATURED IN</span><span>TRAVEL WEEKLY</span><span>WANDER MAG</span><span>GLOBE DAILY</span><span>OFFROUTE</span>
@@ -763,6 +777,63 @@
       navToggle.setAttribute('aria-expanded','false');
     });
   });
+
+  // testimonial auto-sliding carousel (mobile only) — one direction, seamless loop
+  (function(){
+    const track = document.getElementById('testGrid');
+    const dotsWrap = document.getElementById('testDots');
+    if(!track || !dotsWrap) return;
+    const originalSlides = Array.from(track.children);
+    const count = originalSlides.length;
+
+    // clone the first slide and append, so the loop can slide seamlessly back to start
+    const clone = originalSlides[0].cloneNode(true);
+    track.appendChild(clone);
+
+    originalSlides.forEach((_, i)=>{
+      const dot = document.createElement('button');
+      if(i===0) dot.classList.add('active');
+      dotsWrap.appendChild(dot);
+    });
+    const dots = Array.from(dotsWrap.children);
+
+    let idx = 0, timer = null;
+
+    function setActiveDot(i){ dots.forEach((d,di)=>d.classList.toggle('active', di===i)); }
+
+    function step(){
+      idx++;
+      track.style.transition = 'transform .6s cubic-bezier(.16,.84,.44,1)';
+      track.style.transform = `translateX(-${idx*100}%)`;
+      setActiveDot(idx % count);
+      if(idx === count){
+        setTimeout(()=>{
+          track.style.transition = 'none';
+          idx = 0;
+          track.style.transform = 'translateX(0%)';
+        }, 620);
+      }
+    }
+    function start(){ stop(); timer = setInterval(step, 4200); }
+    function stop(){ if(timer) clearInterval(timer); }
+
+    function isMobile(){ return window.matchMedia('(max-width:560px)').matches; }
+    function sync(){
+      if(isMobile()){
+        track.style.transition = 'none';
+        idx = 0;
+        track.style.transform = 'translateX(0%)';
+        setActiveDot(0);
+        start();
+      } else {
+        stop();
+        track.style.transition = '';
+        track.style.transform = '';
+      }
+    }
+    window.addEventListener('resize', sync);
+    sync();
+  })();
 
   // destination horizontal scroll arrows (mobile)
   const destGrid = document.getElementById('destGrid');
